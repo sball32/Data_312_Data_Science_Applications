@@ -1,0 +1,279 @@
+---
+title: "Homework 6"
+author: "Sydney Ball"
+format: 
+  html:
+    self-contained: true
+editor: visual
+---
+
+## Resources
+
+For this homework, please consult the following as needed:
+
+1.  **Lecture 7 Slides:**
+
+<https://jmtfeliciano.github.io/DATA312Spring2025/Data312Spring2025_Lecture7.html#1>
+
+2.  **Lecture 8 Filled In In-Class Exercise:**
+
+<https://jmtfeliciano.github.io/DATA312Spring2025/DATA312Lecture8FilledIn.html>
+
+## Before proceeding
+
+Run the following script:
+
+```{r}
+library(tidyverse)
+library(ggstatsplot)
+```
+
+## Problem 1 (1 pt)
+
+Load `cancer_recurrence.csv` into your R environment (name it however you want).
+
+`cancer_recurrence.csv` is data collected after a study followed brain tumor patients for 3 years after their initial surgery and were given experimental drug (or placebo which is a pill with no active ingredient). The data set contains the three variables:
+
+-   patient_id: Unique Patient records identifier
+
+-   subsequent_cancer: 1 if patient developed subsequent brain cancer within the next three years post surgery.
+
+-   experimental_drug: 1 if patient was given the experimental drug, 0 if given placebo (pill with no active ingredient)
+
+**Question you need to answer:** What was the impact of the experimental drug on the formation of subsequent brain tumor/cancer? Did it increase or decrease the odds of subsequent brain tumor or cancer? For this question, I am only interested in the direction of exp(Estimate) and statistical significance.
+
+```{r}
+# Place your code below
+cancer_recurrence <- read.csv("~/Desktop/cancer_recurrence.csv")
+glimpse(cancer_recurrence)
+
+cancer_recur_model <- lm(subsequent_cancer ~ experimental_drug, data = cancer_recurrence)
+summary(cancer_recur_model)
+
+exp(-0.20587)
+```
+
+**Your written response to the question:**
+
+> The output from the model above, shows that the experimental drug decreased the recurrence of cancer. For every new cancer case, the probability of being diagnosed after using the experimental drug was 81.40% lower than without the drug. This coefficient is also significant with a p-value close to 0. If you take the drug, you are 81.40% less likely to get cancer than without the drug.
+
+## Problem 2
+
+Load `spam_email_dataset.csv` into your R environment (name it however you want).
+
+`spam_email_dataset.csv` is data collected for a subset of emails from 2024 that were studied to identify characteristics of spam emails. The data set contains the following variables:
+
+-   email_id: Assigned identifier number to the email
+
+-   num_words: The number of words the email contained
+
+-   num_links: The number of links the email contained.
+
+-   has_attachment: 1 if email has attachment, 0 if none.
+
+-   contains_offer: 1 if the email offered the email recipient anything of value
+
+-   is_spam: 1 if the email is spam email, 0 if not spam email.
+
+## Problem 2.a. (1 pt)
+
+**What you need to do and question you need to answer:** Using the R chunk provided below, create a logistic regression model that predicts the spam status of the email. Make sure this model controls or factors for the following variables simultaneously: num_words, num_links, has_attachment, and contains_offer. After creating the model, answer this key question: which variable(s) are statistically significant predictors of spam status? Explain how you determined this answer.
+
+```{r}
+# Place your code below
+spam_email_dataset <- read.csv("~/Desktop/spam_email_dataset.csv")
+glimpse(spam_email_dataset)
+
+log_spam_model <- glm(
+  formula = is_spam ~ num_words + num_links + has_attachment + contains_offer,
+  data = spam_email_dataset,
+  family = binomial("logit"))
+
+summary(log_spam_model)
+
+```
+
+**Your written response to the question:**
+
+> It seems that the only significant variable from the logistic regression is the num_links variable. This variable is significant because of its very small p-value which is close to 0.
+
+## Problem 2.b. (1 pt)
+
+**What you need to do and question you need to answer:** Using the R chunk provided below, create a logistic regression model that predicts the spam status of emails. But this time, only control or use num_links as a predictor. After creating the model, compare the new model to the model you created for Problem 2.a. **Which model is the better model according to the Likelihood Ratio Test?**
+
+```{r}
+# Place your code below
+log_spam_model2 <- glm(is_spam ~ num_links, data = spam_email_dataset, family = "binomial" )
+summary(log_spam_model2)
+
+#Likelihood ratio test:
+anova(log_spam_model, log_spam_model2, test = "LRT")
+```
+
+**Your written response to the question:**
+
+> It seems that the first model is better fit to the data because it has the smaller residual difference of 579.89 \< 1281.21. Since the p-value is less than .05 we can also conclude that this first model is statistically significant better model.
+
+## Problem 3
+
+You are given a dataset containing medical information for 500 individuals.
+
+**Dataset Columns:**
+
+-   `Pregnancies`: Number of times pregnant
+
+-   `Glucose`: Plasma glucose concentration (mg/dL)
+
+-   `BloodPressure`: Diastolic blood pressure (mm Hg)
+
+-   `SkinThickness`: Triceps skin fold thickness (mm)
+
+-   `Insulin`: 2-Hour serum insulin (mu U/ml)
+
+-   `BMI`: Body mass index (weight in kg/(height in m)\^2)
+
+-   `DiabetesPedigreeFunction`: Diabetes pedigree function (a measure of hereditary influence)
+
+-   `Age`: Age in years
+
+-   `Outcome`: Binary outcome (1 = diabetes, 0 = no diabetes)
+
+## Problem 3.a. (1 pt)
+
+**What you need to do and question you need to answer:** Using the R chunk provided below, create a logistic regression model that predicts or models diabetes. Make sure this model controls or factors for age only. After creating the model, answer this key question: what is the specific impact of age on diabetes? Detail how age impacts the specific odds of developing diabetes.
+
+```{r}
+# Place your code below
+synthetic_pima_diabetes <- read.csv("~/Desktop/synthetic_pima_diabetes.csv")
+glimpse(synthetic_pima_diabetes)
+
+diabetes_model <- glm(Outcome ~ Age, data = synthetic_pima_diabetes, family = "binomial")
+summary(diabetes_model)
+
+(exp(0.064193)-1)*100
+```
+
+**Your written response to the question:**
+
+> For every additional year aged, a person is 6.63% more likely to be diagnosed with diabetes.
+
+## Problem 3.b. (1 pt)
+
+**What you need to do and question you need to answer:** Using the R chunk provided below, create a logistic regression model that predicts or models diabetes. Make sure this model controls or factors for age and BMI simultaneously only. After creating the model, answer this key question: what is the specific impact of age and BMI on diabetes risk under this model? Detail how both variables impact the specific odds of developing diabetes.
+
+```{r}
+# Place your code below
+diabetes_model2 <- glm(Outcome ~ Age + BMI, data = synthetic_pima_diabetes, family = "binomial")
+summary(diabetes_model2)
+
+(exp(0.07519)-1)*100
+exp(0.15625)
+```
+
+**Your written response to the question:**
+
+> For every additional year aged, a person is 7.81% more likely to be diagnosed with diabetes. For every additional point on BMI scale, a person is 1.17% more likely to be diagnosed with diabetes.
+
+## Problem 3.c. (1 pt)
+
+**Which model is the better model according to the Likelihood Ratio Test:** the model you built for Problem 3.a. or Problem 3.b.? Use the R chunk below to perform the test.
+
+```{r}
+# Place your code below
+#Likelihood ratio test:
+anova(diabetes_model, diabetes_model2, test = "LRT")
+```
+
+**Your written response to the question:**
+
+> Model 2 with controls of both Age and BMI seem to be the better model for this data because model 2 has a smaller residual deviance than model 1. Since the p-value is less than .05 we can also conclude that model 2 is statistically significant better model.
+
+## Problem 3.d. (1 pt)
+
+**What you need to do and question you need to answer:** Using the R chunk provided below, create a logistic regression model that predicts or models diabetes. Besides controlling or modelling for age and BMI, pick two other variables of your own choosing that you think may impact diabetes risk factor (so this model will control or model for a total of four predictors). After creating the model, answer this key question: what is the specific impact of those two variables you've added on diabetes? Detail how those variables impact (or does not impact) the specific odds of developing diabetes based on your latest model.
+
+```{r}
+# Place your code below
+glimpse(synthetic_pima_diabetes)
+
+diabetes_model3 <- glm(Outcome ~ Age + BMI + Glucose + Insulin, data = synthetic_pima_diabetes, family = "binomial")
+summary(diabetes_model3)
+```
+
+## Problem 3.e. (1 pt)
+
+**Which model is the better model according to the Likelihood Ratio Test:** the model you built for Problem 3.b. or Problem 3.d.? Use the R chunk below to perform the test.
+
+```{r}
+anova(diabetes_model2, diabetes_model3, test = "LRT")
+```
+
+**Your written response to the question:**
+
+> It seems that model3, with control for 4 variables is the better fitting model because it has the smaller residual deviance inc comparision to the model from 3.b. or model 2. Since the p-value is less than .05 we can also conclude that this model with 4 control variables is statistically significant better model.
+
+## Problem 4 (1 pt)
+
+Before proceeding, run the following script and study the output below:
+
+```{r}
+disabled_income <- read_csv("https://raw.githubusercontent.com/jmtfeliciano/teachingdata/refs/heads/main/median_disability_income_long.csv") |> rename(disability_status = variable)
+
+head(disabled_income)
+```
+
+The data above contains the following columns:
+
+-   GEOID: the two-digit GEOID for each state.
+
+-   NAME: The state nam
+
+-   disability_status**:** eithermedian_disabled or non_median_disabled.
+
+-   income_estimate:the disability-stratified median yearly income for the state
+
+Using `ggbetweenstats()` from the `ggstatsplot` package, answer the following question: is there a statistically significant difference in yearly state-level median income between disabled and non-disabled individuals in the United States?
+
+```{r}
+# Place your code below
+ggbetweenstats(
+  data = disabled_income,
+  x = disability_status,
+  y = income_estimate,
+  title = "Comparison of Median Yearly Income by Disability Status in the U.S.",
+  xlab = "Disability Status",
+  ylab = "Median Income (USD)"
+)
+```
+
+**Your written response to the question above:**
+
+> Given the very small p-value of 4.46e-19, we can say there is a statistically significant difference between in yearly state-level median income between disabled and non-disabled individuals in the United States.
+
+## Problem 5 (1 pt)
+
+Your tasks for this problem are as follows:
+
+1.  load mpg, a built-in tidyverse dataset, into your R environment.
+2.  create mpg_v2 after filtering for `class` of `compact`, `minivan`, and `pickup` only.
+3.  use mpg_v2 and `ggbetweenstats()` from the `ggstatsplot` package to show the difference in highway mileage (`hwy`) across the three `class` specified.
+4.  summarize the statistical analysis derived from the `ggbetweenstats()` plot (i.e., report the median or mean from the image, and report which pairwise comparisons are statistically significant).
+
+```{r}
+# Place your code below
+mpg_v2 <- mpg |>
+  filter(class == c("compact", "minivan", "pickup"))
+
+ggbetweenstats(
+  data = mpg_v2,
+  x = class,
+  y = hwy,
+  title = "Comparison of Highway MPG by Vehicle Class",
+  xlab = "Vehicle Class",
+  ylab = "Highway MPG"
+)
+```
+
+**Your written statistical summary below:**
+
+> The mean hwy for compact car was 28.25mpg, for minivan it was 21.5 mpg, and for pickup it was 16.83. It also seems that the comparison revealed a statistically significant difference between compact cars and minivans for highway mileage. I believe there is also evidence to suggest that there is a statistically significant difference in mean high mileage between all 3 vehicle classes.

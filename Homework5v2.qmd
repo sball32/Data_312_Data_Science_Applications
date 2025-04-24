@@ -1,0 +1,278 @@
+---
+title: "Homework 5"
+author: "Sydney Ball"
+format: 
+  html:
+    self-contained: true
+editor: visual
+---
+
+## Homework 5
+
+The primary goal of homework 5 is to give you hands-on practice with a number of dplyr verbs we went over in Lecture 5.
+
+Please consider going over the detailed slides presented during lecture 5 here: <https://jmtfeliciano.github.io/DATA312Spring2025/Data312Spring2025_Lecture5>
+
+In lecture 6, we spent the entire class getting hands on experience with map making via Exercise6.rmd, so please revisit the filled in version of Exercise 6 we completed together: <https://jmtfeliciano.github.io/DATA312Spring2025/Exercise6FilledIn>
+
+## Preliminaries
+
+Run the scripts within the R chunk below before attempting the homework assignments:
+
+```{r}
+library(tidyverse)
+library(tidygeocoder)
+library(censusapi)
+library(tigris) 
+```
+
+## Problem 1 (0.5 pt)
+
+Within the R chunk below, use one of the methods, functions, or tools we discussed from `tidygeocoder` to print the approximated longitude and latitude of this address: `4400 Massachusetts Ave NW, Washington, DC 20016`
+
+```{r}
+# Write your solution(s) below
+addresses_df <- data.frame(address = c("4400 Massachusetts Ave NW, Washington, DC"))                              
+geocode(addresses_df, address = address)
+```
+
+## Problem 2 (1 pt)
+
+The table you will need to complete and fill out completely (see prompt below):
+
+| Address                                 | Approximated latitude | Approximated longitude |
+|-----------------------------------------|-----------------------|------------------------|
+| `Staroměstské nám. 1, Praha, Czechia`   | 50.08698              | 14.42058               |
+| `239 Los Cerritos Center, Cerritos, CA` | 33.86203              | 118.094                |
+| `Москва, Россия, 109012`                | 55.66316              | 37.54322               |
+
+Using the R chunk below: use one of the methods, functions, or tools we discussed from `tidygeocoder` to print the approximated longitude and latitude of the addresses provided from the table above. **Make sure to fill in the table above after running your scripts**
+
+```{r}
+# Write your solution(s) below
+czechia_address <- data.frame(address = c("Staroměstské nám. 1, Praha, Czechia"))
+geocode(czechia_address, address = address)
+
+cerritos_address <- data.frame(address = c("239 Los Cerritos Center, Cerritos, CA"))
+geocode(cerritos_address, address = address)
+
+pоссия_address <- data.frame(address = c("Москва, Россия, 109012"))
+geocode(pоссия_address, address = address)
+```
+
+## Problem 3 (0.5 pt)
+
+Within the R chunk below, use one of the methods, functions, or tools we discussed from `tidygeocoder` to print the county-level Census information for the following address: `4400 Massachusetts Ave NW, Washington, DC 20016`
+
+```{r}
+# Write your solution(s) below
+dc_address <- data.frame(address = c("4400 Massachusetts Ave NW, Washington, DC 20016"))
+
+dc_results <- geocode(dc_address, address = address, method = "census", 
+        full_results = TRUE, api_options = list(census_return_type = 'geographies'))
+
+# Script you need to run to see county information
+dc_results$geographies.Counties
+
+# Script you need to run to see county information
+dc_results$`geographies.Census Tracts`
+
+```
+
+## Problem 4 (1 pt)
+
+The table you will need to complete and fill out completely (see prompt below):
+
+| Address                                            | Five digit County GEOID/FIPS |
+|----------------------------------------------------|------------------------------|
+| `21 West Side Dr, Rehoboth Beach, DE 19971`        | 10005                        |
+| `36 Fire Island Blvd, Fire Island Pines, NY 11782` | 36103                        |
+| `539 Commercial St, Provincetown, MA 02657`        | 25001                        |
+
+: Using the R chunk below: use one of the methods, functions, or tools we discussed from `tidygeocoder` to print the approximated longitude and latitude of the addresses provided from the table above. **Make sure to fill in the table above after running your scripts.** Note: You will have to run three separate `geocode()` since `geocode()` usually do not allow multiple addresses when `method = "census"`
+
+**Hint you may not be given in a midterm:** it might be a good idea to run three separate geocode() and each one is saved into the R environment with a unique name. You may also add additional R chunks if desired.
+
+```{r}
+# Write your solution(s) below
+beach_address <- data.frame(address = c("21 West Side Dr, Rehoboth Beach, DE 19971"))
+
+beach_results <- geocode(beach_address, address = address, method = "census", 
+        full_results = TRUE, api_options = list(census_return_type = 'geographies'))
+
+beach_results$geographies.Counties
+
+#----------------------------------------------
+
+fireisland_address <- data.frame(address = c("36 Fire Island Blvd, Fire Island Pines, NY 11782"))
+
+fireisland_results <- geocode(fireisland_address, address = address, method = "census",
+        full_results = TRUE, api_options = list(census_return_type = 'geographies'))
+
+fireisland_results$geographies.Counties
+
+#----------------------------------------------
+
+provincetown_address <- data.frame(address = c("539 Commercial St, Provincetown, MA 02657"))
+
+provinceton_results <- geocode(provincetown_address, address = address, method = "census",
+        full_results = TRUE, api_options = list(census_return_type = 'geographies'))
+
+provinceton_results$geographies.Counties
+```
+
+## Problem 5 (1 pt)
+
+Within the R chunk below, use one of the methods, functions, or tools we discussed from `tidygeocoder` to print the estimated/approximated address from the following coordinates: (a) longitude of -77.08755 and (b) latitude of 38.93584.
+
+```{r}
+# Write your solution(s) below
+reverse_geo(lat = "-77.08755", long = "38.93584")
+```
+
+## Problem 6 Background Information
+
+In class, we briefly discussed the idea of **`left_join(table1, table2)`**, where `table1` represents our primary table while `table2` is the table we want to get supplemental data from. You may think of left_join() as allowing you to supplement data from `table2` into `table1`. For this to work, `table1` and `table2` need to have a share a common variable (e.g, both tables have a common variable named `social_security_number`).
+
+**`table3 <- left_join(table1, table2)`** represents the same idea but instead of just visualizing or printing the merged data, the assignment operator simply saves the resulting table into the R environment.
+
+## Problem 6 (1 pt)
+
+Before proceeding, run the next two R chunks and make sure to pause to read the printed data to understand the structure of the data/
+
+**R chunk for students_data:**
+
+```{r}
+# run this script
+students_data <- read_csv("https://raw.githubusercontent.com/jmtfeliciano/teachingdata/refs/heads/main/students_data.csv")
+head(students_data)
+```
+
+**R chunk for** grades_data**:**
+
+```{r}
+# run this script
+grades_data <- read_csv("https://raw.githubusercontent.com/jmtfeliciano/teachingdata/refs/heads/main/grades_data.csv")
+head(grades_data)
+```
+
+Using the R chunk below, use `left_join()` to combine the two tables from above so you pull the gpa data into the primary students_data table. Save the resulting R object into your R environment as `combined_data`. Afterwards, use head() to verify that `combined_data` worked as intended.
+
+```{r}
+# Write your solution(s) below
+comined_data <- left_join(students_data, grades_data)
+head(comined_data)
+```
+
+## Problem 7 Background Information
+
+Before proceeding, run the next two R chunks and make sure to pause to read the printed data to understand the structure of the data.
+
+a\. R chunk for demographic_data
+
+```{r}
+# run this script
+demographic_data <- read_csv("https://raw.githubusercontent.com/jmtfeliciano/teachingdata/refs/heads/main/demo_data.csv")
+head(demographic_data)
+
+```
+
+b\. R chunk for birth_city_data
+
+```{r}
+# run this script
+birth_city_data <- read_csv("https://raw.githubusercontent.com/jmtfeliciano/teachingdata/refs/heads/main/birth_city_data.csv")
+
+head(birth_city_data)
+
+```
+
+Now, run the following script in Console and pay attention to the error printed for: `left_join(demographic_data, birth_city_data)`
+
+After reading the error message, look at the tables printed above again to see variable names of each columns. Are the column 1s in each data frame share the same data but different names? If yes, how would you fix this?
+
+## Problem 7 (1 pt)
+
+If you run the R code chunk below, you will get the following error: object 'combined_data' not found. One way to make `left_join()` work here is to ensure that `demographic_data` and `birth_city_data` share a common column name (so-called join key) to enable the join. So within the R chunk below, pipe one of the `read_csv()` into `rename()` to ensure both data frames end up having the same variable name for the `join key`.
+
+```{r error = TRUE}
+# Code you need to correct below
+
+demographic_data <- read_csv("https://raw.githubusercontent.com/jmtfeliciano/teachingdata/refs/heads/main/demo_data.csv") 
+  
+
+birth_city_data <- read_csv("https://raw.githubusercontent.com/jmtfeliciano/teachingdata/refs/heads/main/birth_city_data.csv") 
+
+#rename the colum of SSN so that both names match 
+new_demographic_data <- demographic_data |>
+  rename(ssn = social_security_number)
+
+head(new_demographic_data)
+
+#use "ssn" as join key
+combined_data <- left_join(new_demographic_data, birth_city_data)
+head(combined_data)
+```
+
+## Problem 8 (2 pt)
+
+Using the `tigris` package and the techniques taught in lecture and lab exercises, create a map using data from `breast_cancer_state_mortality_2023.csv` to show the breast cancer mortality rate for states across the US in 2023. The variable you need is `deaths_per_100000`.
+
+You may add additional R chunks below if desired.
+
+```{r}
+# Place your code below
+nationwide_shapefile <- states(year = 2021) |>
+  filter(!NAME %in% c("American Samoa", "Commonwealth of the Northern Mariana Islands", "Commonwealth of the Northern Mariana Islands", "Guam", "United States Virgin Islands")) |>
+  shift_geometry()
+
+new_breast_cancer_state_mortality_2023 <- read.csv("~/Desktop/new_breast_cancer_state_mortality_2023.csv") |>
+  mutate(GEOID = as.numeric(GEOID))
+
+head(new_breast_cancer_state_mortality_2023)
+
+nationwide_shapefile <- states(year = 2023) |>
+  mutate(GEOID = as.numeric(GEOID)) |>
+  filter(!NAME %in% c("American Samoa", "Commonwealth of the Northern Mariana Islands", "Commonwealth of the Northern Mariana Islands", "Guam", "United States Virgin Islands")) |>
+  shift_geometry()
+    
+nationwide_breastcancer <- left_join(nationwide_shapefile, new_breast_cancer_state_mortality_2023)
+
+ggplot(nationwide_breastcancer, aes(fill = deaths_per_100000)) +
+  geom_sf() +
+  theme_void() +
+  scale_fill_gradient(low="white", high="magenta4", labels = scales::comma) +
+  labs(fill='Breast Cancer Deaths\
+       Across USA')
+
+
+```
+
+## Problem 9 (2 pt)
+
+Using the `tigris` package and the techniques taught in lecture and lab exercises, create a map using data from `presidential_election1964.csv` to plot or indicate which states won by Barry Goldwater vs Lyndon B. Johnson in the 1964 presidential election. `Victor` is the variable you'd want to plot here. **Note:** the map of states across the US hasn't really changed significantly since 1959 when Hawaii became the 50th state. I am mentioning this because `states(year = 1964)` will not work since it does not exist in the API where `tigris` pulls the data from, so please use any recent year for the state map or shapefile in this homework.
+
+You may add additional R chunks below if desired.
+
+```{r}
+# Place your code below
+presidential_election1964 <- read.csv("~/Desktop/presidential_election1964.csv") |>
+  mutate(GEOID = as.numeric(GEOID)) |>
+  mutate(presidentialDummy = ifelse(Victor == "Johnson", 1, 0))
+
+head(presidential_election1964)
+
+presidential_nationwide_shapefile <- states(year = 2023) |>
+  mutate(GEOID = as.numeric(GEOID)) |>
+  filter(!NAME %in% c("American Samoa", "Commonwealth of the Northern Mariana Islands", "Commonwealth of the Northern Mariana Islands", "Guam", "United States Virgin Islands")) |>
+  shift_geometry()
+    
+nationwide_presidential_race <- left_join(presidential_nationwide_shapefile, presidential_election1964)
+
+ggplot(nationwide_presidential_race, aes(fill = presidentialDummy)) +
+  geom_sf() +
+  theme_void() +
+  scale_fill_gradient(low="red3", high="navy", labels = scales::comma) +
+  labs(fill='Presidential Election')
+
+```

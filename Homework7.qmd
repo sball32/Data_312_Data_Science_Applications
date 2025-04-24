@@ -1,0 +1,359 @@
+---
+title: "Homework 7 - Sydney Ball"
+format: 
+  html:
+    self-contained: true
+editor: visual
+---
+
+## Homework 7
+
+This homework will cover topics covered during both lectures on text mining. For assistance, please see the following references (you may need to copy the link provided then paste it manually into your browser):
+
+1.  Filled In Lecture 9: <https://jmtfeliciano.github.io/DATA312Spring2025/LectureAndExercise9FilledIn.html>
+2.  Filled In Lecture 10: <https://jmtfeliciano.github.io/DATA312Spring2025/DATA312LectureAndExercise10FilledIn.html>
+
+## Preliminaries
+
+Before proceeding, please run the following script to load the packages you will need:
+
+```{r}
+library(tidyverse)
+library(tidytext)
+library(wordcloud)
+library(gutenbergr)
+library(igraph)
+library(ggraph)
+```
+
+## **Problem 1 Data**
+
+This data (`news_headlines`) we are loading are news headlines I scrapped from ABC7 News Network in New York City between July 18, 2017 and January 16, 2018. Please investigate the data print out below. Of note, the `headline` column is the primary source of text data you will be analyzing.
+
+Make sure to run the script below before proceeding:
+
+```{r}
+news_headlines <- read_csv("https://raw.githubusercontent.com/jmtfeliciano/teachingdata/refs/heads/main/abc7ny.csv") |>
+  select(datetime, headline)
+
+head(news_headlines)
+```
+
+## **Problem 1.a. (1 pt)**
+
+Using the R chunk below, create a ggplot image that shows the top 12 words (make sure to exclude stop words) from `news_headlines`. If desired, you may create additional R chunks below.
+
+```{r}
+data("stop_words")  
+news_headlines_tidy <- news_headlines |>
+  unnest_tokens(word, headline) |>
+  anti_join(stop_words, by = "word")
+
+news_words <- news_headlines_tidy |>
+  group_by(datetime, word) |>
+  summarize(n = n(), .groups = "drop") |>
+  arrange(desc(n))
+
+news_words_scored <- news_words |>
+  bind_tf_idf(term = word, document = datetime, n = n)
+
+top12_news_words <- news_words_scored |>
+  arrange(desc(tf_idf)) |>
+  slice_max(tf_idf, n = 12)
+
+ggplot(top12_news_words, aes(x = tf_idf, y = fct_reorder(word, tf_idf))) + 
+  geom_col(fill = "steelblue") +
+  theme_minimal() +
+  labs(x = "tf-idf Score", y = "Word",
+       title = "Top 12 Words from News Headlines")
+```
+
+## **Problem 1.b. (1 pt)**
+
+Using the R chunk below, create a ggplot image that shows the top 13 negative and positive words (make sure to exclude stop words) from `news_headlines` using the bing lexicon. Ensure that the negative and positive words are split into two side-by-side panels (i.e., use `facet_wrap()` as taught in lecture). If desired, you may create additional R chunks below.
+
+```{r}
+bing_sentiments <- get_sentiments("bing")
+
+news_sentiment <- news_words |>
+  inner_join(bing_sentiments, by = "word")
+
+news_word_counts <- news_sentiment |>
+  count(word, sentiment, sort = TRUE)
+
+top13_words <- news_word_counts |>
+  group_by(sentiment) |>
+  slice_max(n, n = 13, with_ties = FALSE) |>
+  ungroup()
+
+ggplot(top13_words, aes(x = n, y = fct_reorder(word, n), fill = sentiment)) +
+  geom_col(show.legend = FALSE) +
+  facet_wrap(~ sentiment, scales = "free_y") +
+  theme_minimal() +
+  labs(title = "Top 13 + & - Words from News Headlines",
+       x = "Count",
+       y = "Word")
+```
+
+## **Problem 1.c. (1 pt)**
+
+> **Prompt:** In 2-5 sentences, summarize in your own words some of the insights you derived from the image you created under Problem 1.b. For the positive panel side, please comment on whether the top 1 word for the positive panel makes sense to you. Remember: these are news article from July 18, 2017 to January 16, 2018.
+
+> **Your response (place your response after this): The plots produced in 1.b show interesting insights on the common news topics from the time of** July 18, 2017 to January 16, 2018. The top negative word on the left being 'killed' would certainly be a strong negative word, but it is alarming how many times it is used in the news---count at around 275 times in the short span of about 6 months. On the right, we have the positive words: the top positive word of 'trump' is also interesting. I am lead to believe that this headline is in reference to President Donald Trump and his common occurrences in the media, especially when he was running for presidential candidacy.
+
+## **Problem 1.d. (1 pt)**
+
+Given that trump is likely a misclassification from the image you generated (hopefully you explained how this is the case under Problem 1.c.), recreate the image you generated from Problem 1.b., but this time, make sure to manually exclude the word "trump" from the list. Use the R chunk below to do this task. If desired, you may create additional R chunks below. Hint: This problem should simply reuse your code from Problem 1.b. but with the addition of one line of code.
+
+```{r}
+news_sentiment <- news_words |>
+  inner_join(bing_sentiments, by = "word") |>
+  filter(word != "trump")
+
+word_counts <- news_sentiment |>
+  count(word, sentiment, sort = TRUE)
+
+top13_words <- word_counts |>
+  group_by(sentiment) |>
+  slice_max(n, n = 13, with_ties = FALSE) |>
+  ungroup()
+
+ggplot(top13_words, aes(x = n, y = fct_reorder(word, n), fill = sentiment)) +
+  geom_col(show.legend = FALSE) +
+  facet_wrap(~ sentiment, scales = "free_y") +
+  theme_minimal() +
+  labs(title = "Top 13 + & - Words from News Headlines",
+       x = "Count",
+       y = "Word")
+```
+
+## **Problem 1.e. (1 pt)**
+
+Using the R chunk below with the nrc lexicon and `news_headlines`, create a ggplot image that shows the top 10 words for following sentiments only: disgust and joy. Again, make sure to exclude stop words. Ensure that the disgust and joy words are split into two side-by-side panels (i.e., use `facet_wrap()` as taught in lecture). If desired, you may create additional R chunks below.
+
+```{r}
+nrc_sentiments <- get_sentiments("nrc") |>
+  filter(sentiment %in% c("disgust", "joy")) #<-- disgust and joy are the sentiments 
+
+news_sentiment_nrc <- news_words |>
+  inner_join(nrc_sentiments, by = "word")
+
+word_counts_nrc <- news_sentiment_nrc |>
+  count(word, sentiment, sort = TRUE)
+
+top10_nrc_words <- word_counts_nrc |>
+  group_by(sentiment) |>
+  slice_max(n, n = 10, with_ties = FALSE) |>
+  ungroup()
+
+ggplot(top10_nrc_words, aes(x = n, y = fct_reorder(word, n), fill = sentiment)) +
+  geom_col(show.legend = FALSE) +
+  facet_wrap(~sentiment, scales = "free_y") +
+  theme_minimal() +
+  labs(title = "Top 10 Joy and Disgust Words from News Headlines",
+       x = "Count",
+       y = "Word")
+```
+
+## **Problem 1.f. (1 pt)**
+
+Using the R chunk below, create a word cloud for `news_headlines` using the using wordcloud package:
+
+```{r}
+# Place your code below
+library(wordcloud)
+
+word_counts <- news_words |>
+  count(word, sort = TRUE)
+
+wordcloud(words = word_counts$word,
+          freq = word_counts$n,
+          min.freq = 10,
+          max.words = 50,) #<-- needed to add these for the code to run (data was too large)
+```
+
+## Problem 2 (1 pt)
+
+Note: This is Practice 3 from Lecture 9 that we didn't have time to do in class.
+
+Your ultimate goal is to create the top 10 words visually for both negative and positive sentiment. After running the first R chunk, make sure to follow the prompts within the second R chunks.
+
+```{r}
+# Creates an R object called hgwells_data 
+# hgwells_data contains text data from the works of H.G. Wells' "The Time Machine"
+library(gutenbergr)
+hgwells_data <- gutenberg_download(c(35))
+head(hgwells_data, 10)
+```
+
+Code you need to fill in after reading and following the prompts from R comments:
+
+```{r}
+# Tokenize hgwells_data and save the data frame into your R environment
+hgwells_words <- hgwells_data |>
+  unnest_tokens(word, text) |>
+  anti_join(stop_words, by = "word")
+
+# Load the bing lexicon into the R env't and then use inner_join() to create a new data frame into your R environment
+bing_sentiments <- get_sentiments("bing")
+
+hgwells_sentiment <- hgwells_words |>
+  inner_join(bing_sentiments, by = "word")
+
+# Create a table similar to the top10_each_sentiment data frame we created
+# Call it hgwells_top10 for this example. Use slice_max(n, n = 10).
+hgwells_counts <- hgwells_sentiment |>
+  count(word, sentiment, sort = TRUE)
+
+hgwells_top10 <- hgwells_counts |>
+  group_by(sentiment) |>
+  slice_max(n, n = 10, with_ties = FALSE) |>
+  ungroup()
+
+# Create an ggplot image that shows the top 10 words visually for both negative and positive sentiment
+ggplot(hgwells_top10, aes(x = n, y = fct_reorder(word, n), fill = sentiment)) +
+  geom_col(show.legend = FALSE) +
+  facet_wrap(~sentiment, scales = "free_y") +
+  theme_minimal() +
+  labs(title = "Top 10 Positive and Negative Words The Time Machine",
+       x = "Count",
+       y = "Word")
+```
+
+## Problem 3 (1.5 pt)
+
+Note: This is Practice 3 from Lecture 10 that we didn't have time to do in class.
+
+The code chunk below downloads into R the following books as `physics_books`: [*Discourse on Floating Bodies* by Galileo Galilei](http://www.gutenberg.org/ebooks/37729), [*Relativity: The Special and General Theory* by Albert Einstein](http://www.gutenberg.org/ebooks/30155), [**Opticks : or, A treatise of the reflections, refractions, inflections and colours of light by Isaac Newton**](https://www.gutenberg.org/ebooks/33504)**, and** [Experimental Researches in Electricity, Volume 1 by Michael Faraday.](https://www.gutenberg.org/ebooks/14986)
+
+Run the code before doing anything else so you can see a print out of `physics_books`:
+
+```{r}
+# Downloads books you will create a tf-idf plot for and visualizes data example
+physics_books <- gutenberg_download(c(37729, 30155, 33504, 14986), 
+                                    meta_fields = "author")
+head(physics_books)
+```
+
+Your ultimate goal for this homework problem is to create a top-15 **bigram tf-idf plot** broken down by `author` in the R chunks provided below:
+
+```{r}
+# Place your code below
+physics_books_tidy <- physics_books |>
+  unnest_tokens(output = bigram, input = text, token = "ngrams", n = 2) |>
+  filter(!is.na(bigram))
+
+head(physics_books_tidy, 10)
+
+physics_bigrams_separated <- physics_books_tidy |>
+  separate(bigram, into = c("word1", "word2"), sep = " ")
+
+physics_bigrams_filtered <- physics_bigrams_separated |>
+  filter(!word1 %in% stop_words$word,
+         !word2 %in% stop_words$word)
+
+physics_bigrams_clean <- physics_bigrams_filtered |>
+  unite(bigram, word1, word2, sep = " ")
+
+head(physics_bigrams_clean)
+
+bigram_counts <- physics_bigrams_clean |>
+  count(author, bigram, sort = TRUE)
+
+bigram_tf_idf <- bigram_counts |>
+  bind_tf_idf(term = bigram, document = author, n = n)
+
+top15_bigrams <- bigram_tf_idf |>
+  group_by(author) |>
+  slice_max(tf_idf, n = 15, with_ties = FALSE) |>
+  ungroup()
+
+head(top15_bigrams)
+
+ggplot(top15_bigrams, aes(x = tf_idf, y = fct_reorder(bigram, tf_idf), fill = author)) +
+  geom_col(show.legend = FALSE) +
+  facet_wrap(~ author, scales = "free") +
+  theme_minimal() +
+  labs(title = "Top 15 Bigrams by Author using tf-idf",
+       x = "tf-idf Score",
+       y = "Bigram")
+```
+
+## Problem 4 (1.5 pt)
+
+Note: This is Practice 4 from Lecture 10 that we didn't have time to do in class.
+
+Run the code before doing anything else so you can see a print out of `newton_book`:
+
+```{r}
+newton_book <- gutenberg_download(c(33504), meta_fields = "author")
+head(newton_book)
+```
+
+Using `newton_book`, create a bigraph graph/network plot using both `graph_from_data_frame()` and `ggraph()` ... feel free to pick any cut off you like for `filter()` (play around with the cut off threshold until the image isn't too crowded):
+
+```{r}
+# Place your code below
+newton_bigrams <- newton_book |>
+  unnest_tokens(bigram, text, token = "ngrams", n = 2) |>
+  filter(!is.na(bigram))
+
+bigrams_separated <- newton_bigrams |>
+  separate(bigram, into = c("word1", "word2"), sep = " ")
+
+bigrams_filtered <- bigrams_separated |>
+  filter(!word1 %in% stop_words$word,
+         !word2 %in% stop_words$word)
+
+bigram_counts <- bigrams_filtered |>
+  count(word1, word2, sort = TRUE)
+
+bigram_graph <- bigram_counts |>
+  filter(n > 8) |>
+  graph_from_data_frame()
+
+ggraph(bigram_graph, layout = "fr") +
+  geom_edge_link(aes(edge_alpha = n), show.legend = FALSE) +
+  geom_node_point(color = "steelblue", size = 5) +
+  geom_node_text(aes(label = name), vjust = 1.5, hjust = 1.1) +
+  theme_void() +
+  labs(title = "Bigram Network from Newton's Book")
+```
+
+```{r}
+newton_bigrams <- newton_book |>
+  unnest_tokens(bigram, text, token = "ngrams", n = 2) |>
+  filter(!is.na(bigram))
+
+head(newton_bigrams)
+
+bigram_separated <- newton_bigrams |>
+  separate(col = bigram, 
+           into = c("word1", "word2"),
+           sep = " ") |>
+  group_by(word1, word2) |> 
+  summarise(n = n())
+
+head(bigram_separated)
+
+bigrams_filtered <- bigram_separated |>
+  filter(!word1 %in% stop_words$word) |>
+  filter(!word2 %in% stop_words$word) 
+
+head(bigrams_filtered, 10)
+
+bigrams_graph <- bigrams_filtered |> 
+  filter(n > 10) |>
+  graph_from_data_frame() 
+
+set.seed(12313)
+
+ggraph(bigrams_graph, layout = "fr") +
+  geom_edge_link(aes(edge_alpha = n), 
+                 show.legend = FALSE, 
+                 end_cap = circle(.07, 'inches'), 
+                 arrow = grid::arrow(type = "closed", 
+                                      length = unit(.15, "inches"))) +
+  geom_node_point(color = "lightblue", size = 5) +
+  geom_node_text(aes(label = name), vjust = 1, hjust = 1)
+```

@@ -1,0 +1,226 @@
+---
+title: "Homework 3"
+author: "Sydney Ball"
+format: 
+  html:
+    self-contained: true
+editor: visual
+---
+
+## Homework 3
+
+The primary goal of homework 3 is to give you hands-on practice with the assignment operator and a number of dplyr verbs we went over in Lecture 3.
+
+For you convenience, a copy of the Lecture 3 slides is located here: <https://jmtfeliciano.github.io/DATA312Spring2025/Data312Spring2025_Lecture3#1>
+
+You may use the filled in Exercise 3 HTML page as a reference guide:
+
+<https://jmtfeliciano.github.io/DATA312Spring2025/Exercise3FilledIn.html>
+
+## What you need to do
+
+You will be assigned tasks throughout this Quarto Document where you will need to fill in the relevant R code based on what was taught in Lecture 3 slides and Data312Exercise3.qmd ... Topics from older lectures may also be revisited for practice.
+
+## Task 1 (1 pt)
+
+Within the R code chunk below, write an R script to (1) load the **tidyverse** package, (2) load the built-in dataset called **midwest** into your R environment, and (3) print a sample of the midwest data by using head() or glimpse(). Afterwards, spend a minute or two examining the printed data to understand the general contents of the **midwest** data.
+
+```{r}
+# Include your code below:
+library(tidyverse)
+data("midwest")
+
+print(head(midwest))
+```
+
+## Task 2
+
+Within your R Console, run one of the following scripts: **help(midwest)** or **?midwest**
+
+After the documentation opens up in your Help pane, answer the following questions below:
+
+### 2.a. What is the data about? (0.5 pt)
+
+Your response (1-2 sentences):
+
+> The Midwest dataset concerns demographic information of Midwest counties from 2000 US census.
+
+### 2.b. Which specific variable represents (1) county names, (2) percentage of children below poverty line and (3) percentage of white Americans? (0.5 pt)
+
+Your response (1-3 sentences):
+
+> The variable which represents county namesL county; percentage of children below poverty line: percchildbelowpovert, and percentage of white American: percwhite.
+
+## Task 3 (0.5 pt)
+
+Using the R code chunk below, print a data subset of **midwest** where **inmetro** is equals to **1**
+
+**Hint:** See Practice 1 from <https://jmtfeliciano.github.io/DATA312Spring2025/Exercise3FilledIn.html> to see an example where I ask you to print a data subset
+
+```{r}
+# Include your code below:
+task3 <- midwest |>
+  filter(inmetro == 1)
+
+task3
+```
+
+## Task 4 (0.5 pt)
+
+Using the R code chunk below, print a data subset of **midwest** where **state** is equals to **IL**
+
+```{r}
+# Include your code below:
+task4 <- midwest |>
+  filter(state == "IL")
+
+task4
+```
+
+## Task 5 (0.5 pt)
+
+Using the R code chunk below, print a data subset of **midwest** where **state** is equals to **IL** and **inmetro** is equals to **1** (Hint: see *filter() verb - multiple filtering variables section* of Exercise 3)
+
+```{r}
+# Include your code below:
+task5 <- midwest |>
+  filter(state == "IL") |>
+  filter(inmetro == 1)
+
+task5
+```
+
+## Task 6 (0.5 pt)
+
+Using the R code chunk below, print a data subset of **midwest** where **state** is equals to either **IL** or **IN**. You must use the in-operator (%in%) taught in lecture.
+
+```{r}
+# Include your code below:
+task6 <- midwest |>
+  filter(state %in% c("IL", "IN") )
+
+task6
+```
+
+## Task 7 (0.5 pt)
+
+Using the R code chunk below, print a data subset of **midwest** where the *percentage of white Americans* (see results of documentation search in Task 2b) is less than 50
+
+```{r}
+# Include your code below:
+task7 <- midwest |>
+  filter(percwhite < 50)
+
+task7
+```
+
+## Task 8 (0.5 pt)
+
+Using the R code chunk below, print a data subset of **midwest** after filtering for data where the *county name* (see results of documentation search in Task 2b) is equal to **ADAMS**
+
+```{r}
+# Include your code below:
+task8 <- midwest |>
+  filter(county == "ADAMS")
+
+task8
+```
+
+## Task 9 (1 pt)
+
+Within the R code chunk below, save a data subset of **midwest** after filtering for data [where the *percentage of children below poverty line* (see Task 2b) is over 25]{.underline} into your R environment as **high_children_poverty**
+
+Afterwards, print a sample of **high_children_poverty** using **head()** or **glimpse()**
+
+```{r}
+# Include your code below:
+high_children_poverty <- midwest |>
+  filter(percchildbelowpovert > 25 )
+
+high_children_poverty
+```
+
+## Task 10 (0.5 pt)
+
+Within the R code chunk below, print a sorted **high_children_poverty** using arrange() with **poptotal** in ascending order.
+
+```{r}
+# Include your code below:
+task10 <- midwest |>
+  arrange(poptotal)
+
+task10
+```
+
+## Task 11 (0.5 pt)
+
+Within the R code chunk below, print a sorted **high_children_poverty** using arrange() with **percchildbelowpovert** in descending order.
+
+```{r}
+# Include your code below:
+task11 <- high_children_poverty |>
+  arrange(desc(percchildbelowpovert))
+
+task11
+```
+
+## Task 12 (0.5 pt)
+
+Within the R code chunk below, write R scripts to (1) load the built-in dataset called **starwars** into your R environment, and (2) print a sample of the starwars data by using head() or glimpse(). Afterwards, spend a minute or two examining the printed data to understand the general contents of the data.
+
+```{r}
+# Include your code below:
+data("starwars")
+head(starwars)
+```
+
+## Task 13 (1 pt)
+
+Your ultimate goal here is to use two successive pipes with two different dplyr verbs (e.g., see Practice 6 in Exercise 3 as an example). But this time, you need to save the final data as **starwars_subset** into your R environment.
+
+**Hint:** the first line of your code should be `starwars_subset <- starwars |>`
+
+Here are the steps I want you to follow:
+
+starwars is piped into the select verb to create a subset of **starwars** where you only keep **height**, **mass**, **gender**, and **species**. Immediately after the select verb, pipe into the filter verb to filter where species is **Ewok**, **Human**, or **Wookiee**
+
+```{r}
+# Include your code below:
+starwars_subset <- starwars |>
+  select(height, mass, gender, species) |>
+  filter(species %in% c("Ewok", "Human", "Wookiee"))
+
+starwars_subset
+```
+
+## Task 14 (0.5 pt)
+
+Print a sample of **starwars_subset** using head() or glimpse() below:
+
+```{r}
+# Include your code below:
+head(starwars_subset)
+```
+
+## **Task 15 (1 pt)**
+
+Create a boxplot using ggplot with **starwars_subset** with species on the x-axis and mass on the y-axis.
+
+```{r}
+# Include your code below:
+ggplot(starwars_subset, aes(x = species, y = mass)) +
+  geom_boxplot() +
+  theme_minimal() +
+  labs(x = "Species",
+       y = "Mass")
+```
+
+## **Task 16**
+
+Once you complete Tasks 1-15, render an HTML file from this Quarto file. Please consult the lecture 2 slides as needed on how to render an HTML file from your Quarto document.
+
+Remember: assuming all your R code are error free, the HTML file will be generated within the same folder where this Data312Homework3.qmd document resides.
+
+**Please submit both your finalized .qmd and HTML files under Homework 3 in Canvas.**
+
+## 
