@@ -1,0 +1,174 @@
+---
+title: "Homework 8"
+format: html
+editor: visual
+---
+
+## Preliminaries
+
+Run the following to load the packages we need:
+
+```{r}
+library(odbc)
+library(DBI)
+library(RPostgres)
+library(tidyverse)
+```
+
+Run the following to connect to the database (but make sure to place the username and password I sent to you inside the quotes):
+
+```{r error = T}
+# creates the database connection you need to create queries
+connection <- dbConnect(RPostgres::Postgres(), 
+                 dbname = "defaultdb",
+                 host = "db-postgresql-nyc3-59589-do-user-8222172-0.j.db.ondigitalocean.com", 
+                 port = 25060,
+                 user = "user2", # place your username inside quotes
+                 password = "AVNS_QfxqtGriuYEil2KDLsK") # place your password inside quotes
+```
+
+## Problem 1 (1 pt)
+
+Note: This is Exercise 9 from Lecture 11 we didn't have time to complete.
+
+Calculate the number of rows within the `sba_disaster_loans` table from the `investment` schema:
+
+```{r error = T}
+# code to modify
+sql_query <- "
+SELECT COUNT(*) as row_count
+FROM investment.sba_investments
+"
+
+# do not modify anything below this
+dbGetQuery(connection, sql_query)
+```
+
+## Problem 2 (1 pt)
+
+Note: This is Exercise 10 from Lecture 11 we didn't have time to complete.
+
+Using the `sba_investments` table from the `investment` schema, calculate the overall total or sum of **`grossapproval`** for the entire table. Rename the total column as `overall_total` via SQL
+
+```{r error = T}
+# code to modify
+sql_query <- "
+SELECT sum(grossapproval) as overall_total
+FROM investment.sba_investments
+"
+
+# do not modify anything below this
+dbGetQuery(connection, sql_query)
+```
+
+## Problem 3 (1 pt)
+
+Note: This is Exercise 11 from Lecture 11 we didn't have time to complete.
+
+Using the `sba_investments` table from the `investment` schema, calculate the total **`grossapproval`** broken down by `projectstate`. Make sure the returned data is ordered alphabetically by `projectstate`
+
+```{r error = T}
+# code to modify
+sql_query <- "
+SELECT projectstate, sum(grossapproval) as total_grossapproval
+FROM investment.sba_investments
+GROUP BY projectstate
+ORDER BY projectstate
+"
+
+# do not modify anything below this
+dbGetQuery(connection, sql_query)
+```
+
+## Problem 4 (1 pt)
+
+Note: This is Exercise 12 from Lecture 11 we didn't have time to complete.
+
+Using the `sba_investments` table from the `investment` schema, calculate the overall total **`grossapproval`** for investments where **`naicsdescription`** is equals to `Limited-Service Restaurants` or `Full-Service Restaurants` ... Rename this total column as `restaurant_total` via SQL.
+
+```{r error = T}
+# code to modify
+sql_query <- "
+SELECT sum(grossapproval) AS restaurant_total
+FROM investment.sba_investments
+WHERE naicsdescription IN ('Limited-Service Restaurants', 'Full-Service Restaurants')
+"
+
+# do not modify anything below this
+dbGetQuery(connection, sql_query)
+```
+
+## Problem 5 (1 pt)
+
+Note: This is Exercise 13 from Lecture 11 we didn't have time to complete.
+
+Using the `sba_investments` table from the `investment` schema, create a table broken down by `projectstate` with these two columns: the total **`grossapproval`**, average **`grossapproval`**. Make sure the returned data is ordered alphabetically by `projectstate`
+
+```{r error = T}
+# code to modify
+sql_query <- "
+SELECT projectstate, sum(grossapproval), avg(grossapproval)
+FROM investment.sba_investments
+GROUP BY projectstate
+ORDER BY projectstate
+"
+
+# do not modify anything below this
+dbGetQuery(connection, sql_query)
+```
+
+## Problem 6 (2 pt)
+
+Using the `sba_investments` table from the `investment` schema, create a table broken down by `projectstate` with these two columns: the total **`grossapproval`**. Use HAVING to only keep `projectstate` where the total exceeds 100000000
+
+```{r error = T}
+# code to modify
+sql_query <- "
+SELECT projectstate, SUM(grossapproval)
+FROM investment.sba_investments
+GROUP BY projectstate
+HAVING SUM(grossapproval) >= 100000000
+"
+
+# do not modify anything below this
+dbGetQuery(connection, sql_query)
+```
+
+## Problem 7 (2 pt)
+
+Using the `sba_investments` table from the `investment` schema, calculate the overall total **`grossapproval`** for investments where (1) **`firstdisbursementdate`** is not empty and (2) **`subprogram`** isneither 'Standard Asset Based' nor 'Guaranty'... Rename this total column as `direct_disbursed_total` via SQL.
+
+```{r error = T}
+# code to modify
+sql_query <- "
+SELECT sum(grossapproval) AS direct_disbursed_total
+FROM investment.sba_investments
+WHERE firstdisbursementdate IS NOT NULL AND subprogram NOT IN ('Standard Asset Based', 'Guaranty')
+"
+
+# do not modify anything below this
+dbGetQuery(connection, sql_query)
+```
+
+## Problem 8 (1 pt)
+
+Using the `sba_disaster_loans` table from the `investment` schema, create a table broken down by **`property_state`** with this additional column: the count of investments. Note: each row is a unique investment. Only return data where **`property_state`** has at least 50 investments.
+
+```{r error = T}
+# code to modify
+sql_query <- "
+SELECT property_state, COUNT(*) AS investment_count
+FROM investment.sba_disaster_loans
+GROUP BY property_state
+HAVING COUNT(*) >= 50
+"
+
+# do not modify anything below this
+dbGetQuery(connection, sql_query)
+```
+
+## After completing Problems 1-8
+
+Submit the qmd file and the HTML rendered output into Canvas.
+
+## 
